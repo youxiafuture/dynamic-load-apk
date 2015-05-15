@@ -1,6 +1,8 @@
 package com.ryg.dynamicload.sample.mainhost;
 
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 
 import android.app.Activity;
@@ -26,6 +28,7 @@ import android.widget.TextView;
 
 import com.ryg.dynamicload.internal.DLIntent;
 import com.ryg.dynamicload.internal.DLPluginManager;
+import com.ryg.dynamicload.internal.DLPluginPackage;
 import com.ryg.dynamicload.service.ITestServiceInterface;
 import com.ryg.utils.DLUtils;
 
@@ -76,8 +79,9 @@ public class MainActivity extends Activity implements OnItemClickListener {
             if (item.packageInfo.services != null && item.packageInfo.services.length > 0) {
                 item.launcherServiceName = item.packageInfo.services[0].name;
             }
+            item.pluginDex = DLPluginManager.getInstance(this).loadApk(item.pluginPath);
             mPluginItems.add(item);
-            DLPluginManager.getInstance(this).loadApk(item.pluginPath);
+
         }
 
         mListView.setAdapter(mPluginAdapter);
@@ -105,6 +109,36 @@ public class MainActivity extends Activity implements OnItemClickListener {
         return super.onOptionsItemSelected(item);
     }
 
+    private void loadClass(PluginItem plugin,String classname,String function){
+    	try {  
+            Class<?> clazz = plugin.pluginDex.classLoader.loadClass(classname);  
+              
+            Object obj = clazz.newInstance();  
+            Class[] param = new Class[2];  
+            param[0] = Integer.TYPE;  
+            param[1] = Integer.TYPE;  
+              
+            Method method = clazz.getMethod(function, param);  
+              
+            Integer ret = (Integer)method.invoke(obj, 1,12);  
+              
+            Log.i("Host", "return result is " + ret);  
+              
+        } catch (ClassNotFoundException e) {  
+            e.printStackTrace();  
+        } catch (InstantiationException e) {  
+            e.printStackTrace();  
+        } catch (IllegalAccessException e) {  
+            e.printStackTrace();  
+        } catch (NoSuchMethodException e) {  
+            e.printStackTrace();  
+        } catch (IllegalArgumentException e) {  
+            e.printStackTrace();  
+        } catch (InvocationTargetException e) {  
+            e.printStackTrace();  
+        }  
+    }
+    
     private class PluginAdapter extends BaseAdapter {
 
         private LayoutInflater mInflater;
@@ -166,7 +200,7 @@ public class MainActivity extends Activity implements OnItemClickListener {
         public String pluginPath;
         public String launcherActivityName;
         public String launcherServiceName;
-
+        public DLPluginPackage pluginDex;
         public PluginItem() {
         }
     }
