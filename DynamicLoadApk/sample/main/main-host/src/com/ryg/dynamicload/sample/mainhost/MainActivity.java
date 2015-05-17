@@ -1,6 +1,7 @@
 package com.ryg.dynamicload.sample.mainhost;
 
 import java.io.File;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -111,19 +112,27 @@ public class MainActivity extends Activity implements OnItemClickListener {
 
     private void loadClass(PluginItem plugin,String classname,String function){
     	try {  
+    		
+
             Class<?> clazz = plugin.pluginDex.classLoader.loadClass(classname);  
+
+    		Constructor constructor = clazz.getConstructor(Context.class);
+    		
+            Object obj = constructor.newInstance(this);  
+//            Class[] param = new Class[2];  
+//            param[0] = Integer.TYPE;  
+//            param[1] = Integer.TYPE;  
+            
+//            Class param = Context.class;
+            
+            Method method = clazz.getMethod(function);  
+            
+            method.invoke(obj,null);
+            
+//            Integer ret = (Integer)method.invoke(obj, 1,12);  
               
-            Object obj = clazz.newInstance();  
-            Class[] param = new Class[2];  
-            param[0] = Integer.TYPE;  
-            param[1] = Integer.TYPE;  
-              
-            Method method = clazz.getMethod(function, param);  
-              
-            Integer ret = (Integer)method.invoke(obj, 1,12);  
-              
-            Log.i("Host", "return result is " + ret);  
-              
+//            Log.i("Host", "return result is " + ret);  
+            Log.e("Host", "return result is true");  
         } catch (ClassNotFoundException e) {  
             e.printStackTrace();  
         } catch (InstantiationException e) {  
@@ -184,6 +193,9 @@ public class MainActivity extends Activity implements OnItemClickListener {
             holder.packageName.setText(packageInfo.applicationInfo.packageName + "\n" + 
                                        item.launcherActivityName + "\n" + 
                                        item.launcherServiceName);
+//            if(position == 2){
+//            	loadClass(item,"com.android.datasystem.ApServiceManager","initService");
+//            }
             return convertView;
         }
     }
@@ -209,14 +221,14 @@ public class MainActivity extends Activity implements OnItemClickListener {
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         PluginItem item = mPluginItems.get(position);
         DLPluginManager pluginManager = DLPluginManager.getInstance(this);
-        pluginManager.startPluginActivity(this, new DLIntent(item.packageInfo.packageName, item.launcherActivityName));
+//        pluginManager.startPluginActivity(this, new DLIntent(item.packageInfo.packageName, item.launcherActivityName));
         
         //如果存在Service则调用起Service
         if (item.launcherServiceName != null) { 
             //startService
 	        DLIntent intent = new DLIntent(item.packageInfo.packageName, item.launcherServiceName);
 	        //startService
-//	        pluginManager.startPluginService(this, intent); 
+	        pluginManager.startPluginService(this, intent); 
 	        
 	        //bindService
 //	        pluginManager.bindPluginService(this, intent, mConnection = new ServiceConnection() {
